@@ -4,16 +4,29 @@ import hashlib
 
 def request_api_data(query_char):
     url = 'https://api.pwnedpasswords.com/range/' + query_char
-    res = requests.get(url)
+    response = requests.get(url)
 
-    if res.status_code != 200:
-        raise RuntimeError('Error feching: {}'.format(res.status.code))
-    return res
+    if response.status_code != 200:
+        raise RuntimeError('Error feching: {}'.format(response.status.code))
+    return response
+
+
+def get_password_leaks_count(hashes, hash_to_check):
+    hashes = (line.split(':') for line in hashes.text.splitlines())
+
+    for h, count in hashes:
+        print(h, count)
 
 
 def pwned_api_check(password):
     sha1_password = hashlib.sha1(password.encode('utf-8')).hexdigest()
-    return sha1_password
+    first5_char, tail = sha1_password[:5], sha1_password[5:]
+    response = request_api_data(first5_char)
+
+    # print(first5_char, tail)
+    # print(response.text)
+
+    return get_password_leaks_count(response, tail)
 
 
-request_api_data('B2E98')
+pwned_api_check('Password123')
